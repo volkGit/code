@@ -1,0 +1,619 @@
+
+
+<div class="row">
+  <div class="col-md-10">
+    <h3 class="panel-title"><b>{{dc.translate.PLANS}}</b></h3>
+  </div>
+  <div class="col-md-2" align="right">
+    <span class="btn-group" uib-dropdown keyboard-nav>
+        <a href id="dropdown" uib-dropdown-toggle> {{dc.translate.CATALOG}} <span class="caret"></span></a>
+        <ul class="dropdown-menu dropdown-menu-right" uib-dropdown-menu role="menu" aria-labelledby="dropdown">
+            <li ng-click="dc.showPlan()"><a>{{dc.translate.SHOW_PLANS}}</a></li>
+        </ul>
+    </span>
+  </div>
+</div>
+
+<div class="row" ng-include="'/app/app-eng/controllers/object-tabs-panel.html'"
+     ng-controller="ObjectTabsPanelController as dc">
+</div>
+<div class="alert alert-warning" ng-show="dc.treedata.length === 0">
+	<strong><i class="glyphicon glyphicon-info-sign"></i>{{dc.translate.FOR_OBJECT}} {{dc.object_id}}, {{dc.translate.NO_PARTS_DEFINED}}</strong>
+</div>
+<div class="row margin-top-15">
+	<div class="col-md-2">
+		<div ng-repeat="info in dc.information">
+			<div class="information-plan" ng-if="info.value">
+				{{info.value}}
+			</div>
+		</div>
+		<div class="treecontrol" style="max-height: {{dc.maxHeightSidebar}}" ng-show="dc.treedata !== undefined && dc.treedata.length !== 0">
+		<treecontrol class="tree-light"
+					 options="dc.options"
+					 tree-model="dc.treedata"
+					 selected-node="dc.selectedNode"
+					 on-selection="dc.showSelected(node)"
+					 expanded-nodes="dc.expandedNodes">
+		    <span ng-switch="" on="node.type">
+		        <span ng-switch-when="part" class="fas" aria-hidden="true"
+		        	  ng-class="{'active-tree-icon' : node.isPlan,
+		        	  			 'fa-folder-open' : dc.isNode(node.id),
+		        	  			 'fa-folder' : !dc.isNode(node.id)
+		        	  }">
+		        </span>
+		        <span ng-switch-when="pic" class="glyphicon glyphicon-picture" aria-hidden="true"></span>
+		        <span ng-switch-when="doc" class="glyphicon glyphicon-file" aria-hidden="true"></span>
+		        <span ng-switch-when="file" class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+		        <span ng-switch-when="movie" class="glyphicon glyphicon-film" aria-hidden="true"></span>
+		        <span ng-switch-when="email" class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+		        <span ng-switch-when="home" class="glyphicon glyphicon-home" aria-hidden="true" ng-class="{'active-tree-icon' : node.isPlan}"></span>
+		        <span ng-switch-when="device" class="fas fa-digital-tachograph" aria-hidden="true" ng-class="{'active-tree-icon' : node.isPlan}"></span>
+		        <span ng-switch-when="trash" class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+		    </span>
+		    <span>{{node.label}}</span>
+		</treecontrol>
+		</div>
+	</div>
+	<div class="col-md-10">
+			<div ng-if="dc.typePlan=='devices' && dc.profile.role_id == 1">
+				<div ng-if="dc.plans !== undefined && dc.plans.length !== 0">
+					<div class="col-sm-2">
+						<span class="btn-group" uib-dropdown keyboard-nav on-toggle="" ng-if="dc.plans.length !==0">
+						    <button class="btn btn-primary btn-with-alert"
+						            id="dropdown" uib-dropdown-toggle
+						            title="{{dc.translate.SELECT_PLAN}}"
+						            ng-disabled="dc.devices[dc.deviceIndex].plan.length !== 0 && dc.checkSvg()">
+						            <i class="fas fa-images"></i>
+						    </button>
+					        <ul class="dropdown-menu dropdown-image" uib-dropdown-menu role="menu" aria-labelledby="dropdown">
+					            <li class="image-drop" role="menuitem" ng-repeat="img in dc.plans" ng-click="dc.setBaseImage(img.src, img.name)"><img src="{{img.src}}"></li>
+					        </ul>
+					    </span>
+				        <button class="btn btn-primary btn-with-alert" title="{{dc.translate.DELETE}}" type="button" ng-click="dc.deleteSvgDevice()">
+				        	<span class="glyphicon glyphicon-trash fa-lg"></span>
+				        </button>
+				        <button class="btn btn-primary btn-with-alert" title="{{dc.translate.MODAL_SAVE}}" type="submit" ng-click="dc.save()">
+				            <span class="glyphicon glyphicon-floppy-disk fa-lg"></span>
+				        </button>
+				    </div>
+				    <div class="col-sm-10">
+				        <div ng-if="dc.messageError" class="alert alert-danger">
+				        		<strong><i class="fas fa-exclamation-triangle fa-lg fa-fw margin-right-5"></i>{{dc.messageError}}</strong>
+				        </div>
+					    <div class="alert alert-success" ng-if="dc.messageSave">
+						    <strong>{{dc.messageSave}}</strong>
+						</div>
+				    </div>
+				</div>
+			</div>
+			<div ng-if="dc.typePlan=='zones' && dc.profile.role_id == 1 && dc.parts[dc.selectedPart].zones[dc.selectedZone].state_id == 16">
+				<div class="form-group" ng-if="dc.plans !== undefined && dc.plans.length === 0">
+			    	<div ng-if="dc.messageError" class="alert alert-danger">
+			    		<strong><i class="fas fa-exclamation-triangle fa-lg fa-fw margin-right-5"></i>{{dc.messageError}}</strong>
+			    	</div>
+			    	<div class="alert alert-warning">
+			    		<strong><i class="glyphicon glyphicon-info-sign"></i>{{dc.translate.UPLOAD_IMAGES_FOLDER}} {{dc.object_id}}</strong>
+			    	</div>
+			    </div>
+			    <div ng-if="dc.plans !== undefined && dc.plans.length !== 0">
+				    <div class="form-group" ng-show="dc.checkPartPlan()">
+				        <!-- <div class="col-sm-2" ng-if="dc.polygons.indexOf(dc.selectedPartId) === -1">
+				            <select class="form-control" ng-model="dc.typeEdit" ng-change="dc.changeEdit()" ng-options="type.id as type.name for type in dc.typesEdit"></select>
+				        </div> -->
+				        <div class="col-sm-2">
+						    <button class="btn btn-primary btn-with-alert"
+				        				ng-class="{'btn-selected' : dc.typeShow == 1}"
+				        				title="{{dc.translate.DISPLAY_WALL_UP}}"
+				        				ng-click="dc.changeShow(1)"
+				        				ng-show="dc.isShowType()">
+				        			<i class="fas fa-grip-vertical fa-lg"></i>
+				        		</button>
+				        		<button class="btn btn-primary btn-with-alert"
+				        				ng-class="{'btn-selected' : dc.typeShow == 2}"
+				        				title="{{dc.translate.DISPLAY_WALL_R}}"
+				        				ng-click="dc.changeShow(2)"
+				        				ng-show="dc.isShowType()">
+				        			<i class="fas fa-grip-horizontal fa-lg"></i>
+				        		</button>
+				        		<button class="btn btn-primary btn-with-alert" title="{{dc.translate.DELETE}}" type="button" ng-click="dc.deleteSvg()">
+				        			<span class="glyphicon glyphicon-trash fa-lg"></span>
+				        		</button>
+				            <button class="btn btn-primary btn-with-alert" title="{{dc.translate.MODAL_SAVE}}" type="submit" ng-click="dc.save()" ng-disabled="!dc.selected.isEdit">
+				            	<span class="glyphicon glyphicon-floppy-disk fa-lg"></span>
+				            </button>
+				        </div>
+				        <div class="col-sm-10">
+				        	<div class="col-sm-2">
+							    <div class="btn-group">
+								    <button class="btn btn-default padding-svg-btn"
+								    	    ng-repeat="s in dc.svg"
+								    	    ng-class="{'active-element': dc.isSelectedSvg(s.id)}"
+								    	    ng-click="dc.setSvg($index)"
+								    	    ng-show="s.type !== 'device'"
+								    	    title="{{s.name}}">
+								    	<svg xmlns="http://www.w3.org/2000/svg"
+								    		 xmlns:xlink="http://www.w3.org/1999/xlink"
+								    		 style="isolation:isolate"
+								    		 viewBox="0 0 100 100"
+								    		 width="29"
+								    		 height="29">
+										<g ng-bind-html="s.code"></g>
+										</svg>
+								    </button>
+								</div>
+				        	</div>
+				        	<div class="col-sm-3">
+				        		<div class="form-group" ng-if="dc.rooms.length !==0 && dc.isPlanZone() && dc.checkWall()">
+							        <span class="btn-group" uib-dropdown keyboard-nav on-toggle="">
+							            <a class="form-control" href id="dropdown" uib-dropdown-toggle >{{dc.translate.CHOSEE_WALL}}</a>
+							            <ul class="dropdown-menu dropdown-image" uib-dropdown-menu role="menu" aria-labelledby="dropdown">
+							                <li class="image-drop" role="menuitem" ng-repeat="img in dc.rooms" ng-click="dc.setPlanWall(img.src, img.name)"><img src="{{img.src}}" ng-if="img.part == dc.parts[dc.selectedPart].part"></li>
+							            </ul>
+							        </span>
+							    </div>
+				        	</div>
+				        	<div class="col-sm-7">
+				        		<div ng-if="dc.messageError" class="alert alert-danger">
+				        			<strong><i class="fas fa-exclamation-triangle fa-lg fa-fw margin-right-5"></i>{{dc.messageError}}</strong>
+				        		</div>
+					       		<div class="alert alert-success" ng-if="dc.messageSave">
+						    		<strong>{{dc.messageSave}}</strong>
+						    	</div>
+				        	</div>
+				        </div>
+				        <div class="clearfix"></div>
+				    </div>
+				    <div class="col-sm-12">
+				    	<div class="alert alert-warning"><strong><i class="glyphicon glyphicon-info-sign"></i>{{dc.info}}</strong></div>
+				    </div>
+				</div>
+			</div>
+		    <div ng-if="dc.typePlan=='parts' && dc.profile.role_id == 1 && dc.parts[dc.selectedPart].state_id == 16">
+			    <div class="form-group" ng-if="dc.plans !== undefined && dc.plans.length === 0">
+			    	<div ng-if="dc.messageError" class="alert alert-danger">
+			    		<strong><i class="fas fa-exclamation-triangle fa-lg fa-fw margin-right-5"></i>{{dc.messageError}}</strong>
+			    	</div>
+			    	<div class="alert alert-warning"><strong><i class="glyphicon glyphicon-info-sign"></i>{{dc.translate.UPLOAD_IMAGES_FN}} {{dc.object_id}}</strong></div>
+			    </div>
+			    <div class="row">
+			    	<div class="form-group" ng-if="dc.plans !== undefined && dc.plans.length !== 0">
+			    	<div class="row margin-0" ng-show="dc.object_image">
+				        <div class="col-md-2">
+				            <label>{{dc.translate.SECTION_LABEL}}</label>
+				        </div>
+				        <div class="col-md-2 width-10">
+				        	<label>{{dc.translate.SCALE}} - {{dc.zooms.zoom.toFixed(2)}}</label>
+			    		</div>
+				        <div class="col-md-8">
+				        </div>
+			    	</div>
+			        <div class="col-md-2" ng-show="dc.object_image">
+			            <input type="text" class="form-control" disabled="disabled" ng-model="dc.selectedPartName" ng-change="dc.changeTextPart()" value="{{dc.selectedPartName}}">
+			        </div>
+			        <div class="col-md-2" ng-show="dc.object_image">
+			    		<slider-range min="0.2" max="2" step="0.01" value-min="dc.zooms.zoom" value-max="dc.zooms.max"></slider-range>
+			    	</div>
+			        <div class="col-md-3">
+			        	<div class="form-group">
+				        	<span class="btn-group" uib-dropdown keyboard-nav on-toggle="" ng-if="dc.plans.length !==0">
+						            <button class="btn btn-primary btn-with-alert"
+						            		id="dropdown" uib-dropdown-toggle
+						            		title="{{dc.translate.SELECT_PLAN}}"
+						            		ng-disabled="dc.parts[dc.selectedPart].plan_part_shape.length !== 0">
+						        		<i class="fas fa-images"></i>
+						        	</button>
+					            <ul class="dropdown-menu dropdown-image" uib-dropdown-menu role="menu" aria-labelledby="dropdown">
+					                <li class="image-drop" role="menuitem" ng-repeat="img in dc.plans" ng-click="dc.setBaseImage(img.src, img.name)"><img src="{{img.src}}"></li>
+					            </ul>
+					        </span>
+			    			<button class="btn btn-primary btn-with-alert"
+			    					ng-class="{'btn-selected' : dc.typeEditPart == 1}"
+			    					ng-click="dc.changeEditPart(1)"
+			    					title="{{dc.translate.SQUARE}}"
+			    					ng-if="dc.parts[dc.selectedPart].state_id == 16 && dc.object_image">
+				        		<i class="fas fa-vector-square fa-lg"></i>
+				        	</button>
+				        	<button class="btn btn-primary btn-with-alert"
+				        			ng-class="{'btn-selected' : dc.typeEditPart == 2}"
+				        			ng-click="dc.changeEditPart(2)" title="{{dc.translate.POLYGON}}"
+				        			ng-if="dc.parts[dc.selectedPart].state_id == 16 && dc.object_image">
+				        		<i class="fas fa-draw-polygon fa-lg"></i>
+				        	</button>
+				        	<button class="btn btn-primary btn-with-alert"
+			    					ng-class="{'btn-selected' : dc.showAllZones}"
+			    					ng-click="dc.changeShowZone()"
+			    					title="{{dc.titleZones}}"
+			    					ng-if="dc.object_image">
+				        		<i class="fas fa-braille fa-lg"></i>
+				        	</button>
+				    		<button class="btn btn-primary btn-with-alert"
+				    				ng-click="dc.deleteModalPart()"
+				    				title="{{dc.translate.DELETE_SECTION}}"
+				    				ng-disabled="dc.parts[dc.selectedPart].plan_part_shape.length === 0"
+				    				ng-show="dc.object_image">
+				    			<span class="glyphicon glyphicon-trash fa-lg"></span>
+				    		</button>
+				        	<button class="btn btn-primary btn-with-alert" type="submit"
+				        			ng-click="dc.save()"
+				        			title="{{dc.translate.MODAL_SAVE}}"
+				        			ng-show="dc.object_image"
+				        			ng-disabled="!dc.selected.isEdit">
+				        		<span class="glyphicon glyphicon-floppy-disk fa-lg"></span>
+				        	</button>
+				        </div>
+			    	</div>
+			    	<div class="col-md-3">
+			    		<div ng-if="dc.messageError" class="alert alert-danger">
+			    			<strong><i class="fas fa-exclamation-triangle fa-lg fa-fw margin-right-5"></i>{{dc.messageError}}</strong>
+			    		</div>
+				       	<div class="alert alert-success" ng-if="dc.messageSave">
+					    	<strong>{{dc.messageSave}}</strong>
+					    </div>
+			    	</div>
+			    	<div class="col-md-12">
+				    	<div class="form-group">
+					        <div class="alert alert-warning" ng-if="dc.messageInfo"><strong><i class="glyphicon glyphicon-info-sign"></i>{{dc.messageInfo}}</strong></div>
+					    </div>
+			    	</div>
+			    </div>
+		    </div>
+		</div>
+		<div ng-if="dc.baseSrc && dc.graph.width && dc.checkPartPlan()">
+		    <div class="row">
+		    	<div ng-class="{'col-md-12' : dc.typeShow == 1,'col-md-7' : dc.typeShow == 2}">
+		        <svg class="main-svg" ng-click="dc.drawPart($event)" ng-mousemove="dc.setLine($event)" ng-attr-height="{{dc.graph.height}}" ng-attr-width="{{dc.graph.width}}" ng-if="dc.baseSrc">
+		            <image id="plan" sketch:type="MSBitmapLayer" x="-3" y="-3" ng-attr-width="{{dc.graph.width}}" ng-attr-height="{{dc.graph.height}}" xlink:href="{{dc.baseSrc}}" draggable="false" 
+		            zoom-params="{{dc.zooms.image}}"
+             		zoom-values="dc.graph"
+             		zoom="{{dc.zooms.zoom}}"
+             		original-values="dc.origGraph"
+             		blocked="dc.blockedZoom">
+             		</image>
+		            <rect x="-8" y="0" width="5" height="600" style="fill:black"></rect>
+		            <g ng-repeat="coordinate in dc.coordinatesParts">
+		                <rect class="resize-bottom-top rect-border"
+		                      ng-class="{'rect-active': coordinate.id === dc.selectedPartId,
+		                      			 'rect-hover' : coordinate.id === dc.selectedPartId,
+		                      			 'active-wall': dc.wall.selected == 'top' && coordinate.id === dc.selectedPartId,
+		                      			 'cursor-default' : coordinate.blocked
+		                      }"
+		                      ng-click="dc.draw($event, coordinate.id, coordinate.x, coordinate.y - dc.border,'top', coordinate.width)"
+		                      resize="top"
+		                      ng-attr-x="{{coordinate.x}}"
+		                      ng-attr-y="{{coordinate.y - dc.border}}"
+		                      ng-attr-width="{{coordinate.width}}"
+		                      ng-attr-height="{{dc.border}}"
+		                      plan-width="coordinate.width"
+		                      plan-border="{{dc.border}}"
+		                      plan-height="coordinate.height"
+		                      plan-x="coordinate.x"
+		                      plan-y="coordinate.y"
+		                      ng-if="coordinate.width"
+		                      blocked="{{coordinate.blocked}}"
+		                      position-x="dc.default.x"
+		                      position-y="dc.default.y"
+		                      graphs="{{dc.coordinatesValues}}"
+		                      intersection="dc.intersection"
+		                      function="dc.updateOriginalParts()">
+		                </rect>
+		                <rect zoom-params="{{dc.zooms.part}}"
+		                      zoom-values="coordinate"
+		                      original-values="dc.originalParts[$index]"
+             				  zoom="{{dc.zooms.zoom}}"
+             				  blocked="dc.blockedZoom">
+		                </rect>
+
+		                <rect class="resize-bottom-top rect-border"
+		                      ng-class="{'rect-active': coordinate.id === dc.selectedPartId,
+		                      			 'rect-hover' : coordinate.id === dc.selectedPartId,
+		                                 'active-wall': dc.wall.selected == 'bottom' && coordinate.id === dc.selectedPartId,
+		                                 'cursor-default' : coordinate.blocked
+		                  	  }"
+		                      ng-click="dc.draw($event, coordinate.id, coordinate.x, coordinate.y + coordinate.height, 'bottom', coordinate.width)"
+		                      resize="bottom"
+		                      ng-attr-x="{{coordinate.x}}"
+		                      ng-attr-y="{{coordinate.y + coordinate.height}}"
+		                      ng-attr-width="{{coordinate.width}}"
+		                      ng-attr-height="{{dc.border}}"
+		                      plan-width="coordinate.width"
+		                      plan-border="{{dc.border}}"
+		                      plan-height="coordinate.height"
+		                      plan-x="coordinate.x"
+		                      plan-y="coordinate.y"
+		                      ng-if="coordinate.width"
+		                      blocked="{{coordinate.blocked}}"
+		                      position-x="dc.default.x"
+		                      position-y="dc.default.y"
+		                      graphs="{{dc.coordinatesValues}}"
+		                      intersection="dc.intersection"
+		                      function="dc.updateOriginalParts()">
+		                </rect>
+
+		                <rect class="resize-left-right rect-border"
+		                      ng-class="{'rect-active': coordinate.id === dc.selectedPartId,
+		                      			 'rect-hover' : coordinate.id === dc.selectedPartId,
+		                      			 'active-wall': dc.wall.selected == 'left' && coordinate.id === dc.selectedPartId,
+		                      			 'cursor-default' : coordinate.blocked
+		                      }"
+		                      ng-click="dc.draw($event, coordinate.id, coordinate.x - dc.border, coordinate.y - dc.border, 'left', coordinate.height)"
+		                      resize="left"
+		                      ng-attr-x="{{coordinate.x - dc.border}}"
+		                      ng-attr-y="{{coordinate.y - dc.border}}"
+		                      ng-attr-width="{{dc.border}}"
+		                      ng-attr-height="{{coordinate.height + 2*dc.border}}"
+		                      plan-width="coordinate.width"
+		                      plan-border="{{dc.border}}"
+		                      plan-height="coordinate.height"
+		                      plan-x="coordinate.x"
+		                      plan-y="coordinate.y"
+		                      ng-if="coordinate.width"
+		                      blocked="{{coordinate.blocked}}"
+		                      position-x="dc.default.x"
+		                      position-y="dc.default.y"
+		                      graphs="{{dc.coordinatesValues}}"
+		                      intersection="dc.intersection"
+		                      function="dc.updateOriginalParts()">
+		                </rect>
+
+		                <rect class="resize-left-right rect-border"
+		                      ng-class="{'rect-active': coordinate.id === dc.selectedPartId,
+		                      			 'rect-hover' : coordinate.id === dc.selectedPartId,
+		                      			 'active-wall': dc.wall.selected == 'right' && coordinate.id === dc.selectedPartId,
+		                      			 'cursor-default' : coordinate.blocked
+		                      }"
+		                      ng-click="dc.draw($event, coordinate.id, coordinate.x + coordinate.width, coordinate.y - dc.border, 'right', coordinate.height)"
+		                      resize="right"
+		                      ng-attr-x="{{coordinate.x + coordinate.width}}"
+		                      ng-attr-y="{{coordinate.y - dc.border}}"
+		                      ng-attr-width="{{dc.border}}"
+		                      ng-attr-height="{{coordinate.height + 2*dc.border}}"
+		                      plan-width="coordinate.width"
+		                      plan-border="{{dc.border}}"
+		                      plan-height="coordinate.height"
+		                      plan-x="coordinate.x"
+		                      plan-y="coordinate.y"
+		                      ng-if="coordinate.width"
+		                      position-x="dc.default.x"
+		                      position-y="dc.default.y"
+		                      blocked="{{coordinate.blocked}}"
+		                      graphs="{{dc.coordinatesValues}}"
+		                      intersection="dc.intersection"
+		                      function="dc.updateOriginalParts()">
+		                </rect>
+
+		                <rect class="rect-item"
+		                	  ng-click="dc.draw($event, coordinate.id, coordinate.x, coordinate.y)"
+		                	  ng-class="{'cursor-default': coordinate.blocked}"
+		                      drag-drop
+		                      plan-x="coordinate.x"
+		                      plan-y="coordinate.y"
+		                      ng-attr-x="{{coordinate.x}}"
+		                      ng-attr-y="{{coordinate.y}}"
+		                      plan-border="{{dc.border}}"
+		                      ng-attr-width="{{coordinate.width}}"
+		                      ng-attr-height="{{coordinate.height}}"
+		                      plan-width="coordinate.width"
+		                      plan-height="coordinate.height"
+		                      min-x="{{dc.border}}"
+		                      max-x="{{dc.graph.width - coordinate.width - dc.border}}"
+		                      min-y="{{dc.border}}"
+		                      max-y="{{dc.graph.height - coordinate.height - dc.border}}"
+		                      position-x="dc.default.x"
+		                      position-y="dc.default.y"
+		                      ng-if="coordinate.width"
+		                      blocked="{{coordinate.blocked}}"
+		                      graphs="{{dc.coordinatesValues}}"
+		                      intersection="dc.intersection"
+		                      function="dc.changePositionText(startX, startY, x, y, 'square')"
+		                      end-drag-drop="dc.endDragDrop()">
+		                </rect>
+		                <text drag-drop
+		                	  plan-x="coordinate.xText"
+		                	  plan-y="coordinate.yText"
+		                	  blocked="{{coordinate.blocked}}"
+		                	  class="text-fill"
+		                      ng-attr-x="{{coordinate.xText}}"
+		                      text-anchor="middle"
+		                      position-x="dc.textPart.x"
+		                	  position-y="dc.textPart.y"
+		                      ng-attr-y="{{coordinate.yText}}">
+		                      {{coordinate.text}}
+		                </text>
+		            </g>
+		            <!--Polygon -->
+		            <g ng-repeat="(key, polygon) in dc.coordinatesPolygon">
+		            	<polygon drag-drop
+		            		     class="svg-polygon"
+		            		     ng-click="dc.draw($event, polygon.id)"
+		            		     ng-class="{'polygon-active': dc.selectedPartId == polygon.id}"
+		            			 points="{{polygon.polygon.points}}"
+		            			 ng-attr-transform="{{'translate(' + polygon.polygon.translateX + ',' + polygon.polygon.translateY + ')'}}"
+		            			 plan-x="polygon.polygon.translateX"
+		            			 plan-y="polygon.polygon.translateY"
+		            			 function="dc.changePositionText(startX, startY, x, y, 'polygon')"
+		            			 end-drag-drop="dc.endDragDrop()"
+		            			 blocked="{{polygon.blocked}}">
+		            	</polygon>
+		            	<g ng-repeat="circle in polygon.circles">
+		            	    <circle drag-drop
+		            	    		class="svg-circle-black"
+		            	    		plan-x="circle.x"
+		            	    		plan-y="circle.y"
+		            	    		ng-attr-cx="{{circle.x + polygon.polygon.translateX}}"
+		            	    		ng-attr-cy="{{circle.y + polygon.polygon.translateY}}"
+		            	    		ng-attr-r="{{circle.r}}"
+		            	    		function="dc.reloadPoints()"
+		            	    		blocked="{{polygon.blocked}}">
+		            	    </circle>
+		            	    <g zoom-params="{{dc.zooms.polygon}}"
+		                      zoom-values="circle"
+		                      original-values="dc.originalPolygon[key].circles[$index]"
+		                      function="dc.reloadAllPoints()"
+             				  zoom="{{dc.zooms.zoom}}"
+             				  blocked="dc.blockedZoom">
+             				</g>
+		            	</g>
+		            	<line class="svg-line"
+		            		  ng-attr-x1="{{dc.line.startX}}"
+		            		  ng-attr-y1="{{dc.line.startY}}"
+		            		  ng-attr-x2="{{dc.line.endX}}"
+		            		  ng-attr-y2="{{dc.line.endY}}"
+		            		  ng-if="dc.line.startX !== 0">
+		            	</line>
+		            	<text drag-drop
+		                	  plan-x="polygon.xText"
+		                	  plan-y="polygon.yText"
+		                	  position-x="dc.textPart.x"
+		                	  position-y="dc.textPart.y"
+		                	  blocked="{{polygon.blocked}}"
+		                	  class="text-fill"
+		                      ng-attr-x="{{polygon.xText}}"
+		                      text-anchor="middle"
+		                      ng-attr-y="{{polygon.yText}}">
+		                      {{polygon.text}}
+		                </text>
+		                <g zoom="{{dc.zooms.zoom}}"
+		                   zoom-params="{{dc.zooms.polygonText}}"
+		                   zoom-values="polygon"
+		                   original-values="dc.originalPolygon[key]"
+		                   blocked="dc.blockedZoom">
+		                </g>
+		            </g>
+		            <!-- end Polygon -->
+		            <g ng-repeat="zone in dc.coordinatesZones">
+		              <circle drag-drop
+		                      plan-x="zone.x"
+		                      plan-y="zone.y"
+		                      min-x="{{dc.minX}}"
+		                      max-x="{{dc.maxX}}"
+		                      min-y="{{dc.minY}}"
+		                      max-y="{{dc.maxY}}"
+		                      class="svg-circle"
+		                      ng-class="{'circle-selected': zone.id == dc.selectedZoneId, 'circle-hide' : dc.isOtherZone(zone.x ,zone.y, $index)}"
+		                      ng-click="dc.selectZone(zone)"
+		                      ng-attr-cx="{{zone.x}}"
+		                      ng-attr-cy="{{zone.y}}"
+		                      ng-attr-r="{{zone.r}}"
+		                      blocked="{{zone.blocked == 0 && dc.typePlan == 'zones' ? 0 : 1}}"
+		                      ng-show="zone.x != -1000 && (zone.hidden == 0 || dc.showAllZones)">
+		              </circle>
+		              <g zoom="{{dc.zooms.zoom}}"
+		                   zoom-params="{{dc.zooms.zones}}"
+		                   zoom-values="zone"
+		                   original-values="dc.saveZones[$index]"
+		                   blocked="dc.blockedZoom">
+		              </g>
+		              <text class="text-circle"
+		              		  ng-class="{'circle-hide' : dc.isOtherZone(zone.x ,zone.y, $index)}"
+		                      ng-attr-x="{{zone.x}}"
+		                      ng-attr-y="{{zone.y + zone.r/2 }}"
+		                      text-anchor="middle"
+		                      ng-mouseover="dc.hideText(zone.id)"
+							  ng-mouseleave="dc.showText()"
+							  ng-click="dc.selectZone(zone)"
+		                      ng-show="zone.x != -1000 && dc.isHoverZone(zone.id) && (zone.hidden == 0 || dc.showAllZones)">
+		                      {{zone.number}}
+		              </text>
+		            </g>
+		            <g ng-repeat="area in dc.intersection">
+		            	<rect class="rect-area"
+			            	  ng-attr-x="{{area.x}}"
+			            	  ng-attr-y="{{area.y}}"
+			            	  ng-attr-width="{{area.width}}"
+			            	  ng-attr-height="{{area.height}}"
+			            	  ng-if="area.width > 0">
+			            </rect>
+		        	</g>
+
+		        <g ng-repeat="svg in dc.coordinatesSvg">
+		        	<rect class="svg-blur"
+		        		  ng-attr-x="{{svg.x - 5}}"
+		        		  ng-attr-y="{{svg.y}}"
+		        		  ng-attr-width="{{svg.width + 10}}"
+		        		  ng-attr-height="{{svg.height}}"
+		        		  ng-show="dc.selectedSvgIndex == $index"/>
+					<filter id="filter" filterUnits="userSpaceOnUse">
+    					<feGaussianBlur  stdDeviation="5" />
+  					</filter>
+		        	<svg xmlns="http://www.w3.org/2000/svg"
+		        		 xmlns:xlink="http://www.w3.org/1999/xlink"
+		        		 style="isolation:isolate"
+		        		 viewBox="0 0 100 100"
+		        		 ng-attr-width="{{svg.width}}"
+		        		 ng-attr-height="{{svg.height}}"
+		        		 ng-attr-x="{{svg.x}}"
+		        		 ng-attr-y="{{svg.y}}">
+							<g drag-drop
+							   ng-attr-x="{{svg.x}}"
+							   ng-attr-y="{{svg.y}}"
+							   plan-x="svg.x"
+							   plan-y="svg.y"
+							   blocked="{{svg.blocked}}"
+							   class="svg-plan"
+							   ng-click="dc.setSelectedSvg($index)"
+							   ng-mouseover="dc.showTitle($index)"
+							   ng-mouseleave="dc.hideTitle($index)">
+							   <g ng-bind-html="svg.code"></g>
+							</g>
+					</svg>
+
+					<g zoom="{{dc.zooms.zoom}}"
+		                   zoom-params="{{dc.zooms.svg}}"
+		                   zoom-values="svg"
+		                   original-values="dc.saveCoordinatesSvg[$index]"
+		                   blocked="dc.blockedZoom">
+		            </g>
+					<rect style="fill:#000;fill-opacity:0.7"
+						  ng-attr-width="{{dc.widthTitle(svg.title.length, svg.type)}}"
+						  height="20"
+						  ng-attr-x="{{svg.x + 20}}"
+						  ng-attr-y="{{svg.y- 20}}"
+						  ng-show="svg.isShow">
+					</rect>
+					<text style="fill:#fff"
+						  ng-attr-x="{{svg.x + 34}}"
+						  ng-attr-y="{{svg.y- 5}}"
+						  ng-show="svg.isShow">
+						{{svg.title}}
+					</text>
+		        </g>
+		    </div>
+		    <div ng-class="{'col-md-12' : dc.typeShow == 1,'col-md-5' : dc.typeShow == 2}">
+		        <svg class="svg-wall" ng-attr-height="{{dc.wall.height}}" ng-attr-width="{{dc.wall.width}}" ng-if="dc.wall.selected">
+		          <image sketch:type="MSBitmapLayer"
+		          		 x="0"
+		          		 y="0"
+		          		 ng-attr-width="{{dc.wall.width}}"
+		          		 ng-attr-height="{{dc.wall.height}}"
+		          		 xlink:href="{{dc.planWall}}">
+		          	</image>
+		            <g ng-repeat="zone in dc.coordinatesWall[dc.wall.selected]">
+		            <rect drag-drop
+		                      plan-x="zone.x"
+		                      plan-y="zone.y"
+		                      class="rect-item-wall"
+		                      ng-class="{'circle-selected': zone.id == dc.selectedZoneId}"
+		                      ng-attr-x="{{zone.x}}"
+		                      ng-attr-y="{{zone.y}}"
+		                      min-x="0"
+		                      max-x="{{dc.wall.width - zone.width}}"
+		                      max-y="{{dc.wall.height - zone.height}}"
+		                      min-y="0"
+		                      ng-attr-width="{{zone.width}}"
+		                      ng-attr-height="{{zone.height}}"
+		                      end-drag-drop="dc.saveCoordinateWall()">
+		            </rect>
+		            <text class="text-circle"
+		                      ng-attr-x="{{zone.x + zone.width/2}}"
+		                      text-anchor="middle"
+		                      ng-attr-y="{{zone.y + zone.height/2 }}">
+		                      {{zone.number}}
+		            </text>
+		          </g>
+		        </svg>
+		    </div>
+		    </div>
+		</div>
+	</div>
+</div>
+<hot-keys on-shortcuts="dc.shortcuts"></hot-keys>
